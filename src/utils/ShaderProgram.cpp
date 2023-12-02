@@ -8,7 +8,17 @@ ShaderProgram::ShaderProgram(std::string vertexShader,
   this->program = compileProgram();
 }
 
-GLuint ShaderProgram::compileShader(std::string shaderSource, GLenum shaderType) {
+ShaderProgram::ShaderProgram(std::string vertexShader,
+                             std::string fragmentShader,
+                             UniformData uniformData) {
+  this->vertexShader = compileShader(vertexShader, GL_VERTEX_SHADER);
+  this->fragmentShader = compileShader(fragmentShader, GL_FRAGMENT_SHADER);
+  this->program = compileProgram();
+  this->uniformData = uniformData;
+}
+
+GLuint ShaderProgram::compileShader(std::string shaderSource,
+                                    GLenum shaderType) {
   // Create and compile shader
   GLuint shader = glCreateShader(shaderType);
   const char *source = shaderSource.c_str();
@@ -48,3 +58,19 @@ GLuint ShaderProgram::compileProgram() {
 
   return program;
 }
+
+void ShaderProgram::setUniformData(UniformData uniformData) {
+  this->uniformData = uniformData;
+}
+void ShaderProgram::sendUniformData() {
+  glUniform2f(glGetUniformLocation(program, "u_resolution"),
+              uniformData.resolution[0], uniformData.resolution[1]);
+  glUniform2f(glGetUniformLocation(program, "u_center"), uniformData.center[0],
+              uniformData.center[1]);
+  glUniform1f(glGetUniformLocation(program, "u_zoom"), uniformData.zoom);
+  glUniform1f(glGetUniformLocation(program, "u_iterations"),
+              uniformData.iterations);
+}
+void ShaderProgram::use() { glUseProgram(program); }
+
+void ShaderProgram::unuse() { glUseProgram(0); }

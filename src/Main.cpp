@@ -5,16 +5,16 @@
 #include <iostream>
 // Local includes
 #include "utils/ShaderProgram.hpp"
-#include "utils/common.hpp"
 
 real vertices[] = {
     -1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
 };
 
+int width = 1280;
+int height = 720;
+
 int main() {
   // Window dimensions
-  const unsigned int width = 640;
-  const unsigned int height = 480;
   // Initialize GLFW
   if (!glfwInit())
     std::cerr << "Failed to init GLFW." << std::endl;
@@ -31,10 +31,8 @@ int main() {
     std::cerr << "Failed to initialize GLEW." << std::endl;
 
   // Create and compile shader program
-  std::string vertexShaderSource = readFile("./shaders/quad.vs.glsl");
-  std::string fragmentShaderSource = readFile("./shaders/mandelbrot.fs.glsl");
-  ShaderProgram shaderProgram(vertexShaderSource, fragmentShaderSource);
-  GLuint program = shaderProgram.compileProgram();
+  ShaderProgram shaderProgram(readFile("./shaders/quad.vs.glsl"),
+                              readFile("./shaders/mandelbrot.fs.glsl"));
 
   // Create and populate a VBO, and setup VAO
   GLuint VBO, VAO;
@@ -55,32 +53,22 @@ int main() {
   uniformData.center[1] = 0.0;
   uniformData.zoom = 1.0;
   uniformData.iterations = 100.0;
-  // Send uniform data to GPU
-  glUseProgram(program);
-  glUniform2f(glGetUniformLocation(program, "u_resolution"),
-              uniformData.resolution[0], uniformData.resolution[1]);
-  glUniform2f(glGetUniformLocation(program, "u_center"), uniformData.center[0],
-              uniformData.center[1]);
-  glUniform1f(glGetUniformLocation(program, "u_zoom"), uniformData.zoom);
-  glUniform1f(glGetUniformLocation(program, "u_iterations"),
-              uniformData.iterations);
 
   // Main loop
+  glBindVertexArray(VAO);
   while (!glfwWindowShouldClose(window)) {
     // Input
     processInput(window, uniformData);
-    // Send updated uniforms to GPU
-    glUniform2f(glGetUniformLocation(program, "u_center"),
-                uniformData.center[0], uniformData.center[1]);
-    glUniform1f(glGetUniformLocation(program, "u_zoom"), uniformData.zoom);
-    glUniform1f(glGetUniformLocation(program, "u_iterations"),
-                uniformData.iterations);
-
+    // Set and send updated uniforms to GPU
+    shaderProgram.use();
+    uniformData.resolution[0] = width;
+    uniformData.resolution[1] = height;
+    shaderProgram.setUniformData(uniformData);
+    shaderProgram.sendUniformData();
     // Rendering commands
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     // Check and call events and swap buffers
     glfwSwapBuffers(window);
@@ -88,4 +76,38 @@ int main() {
   }
 
   return 0;
+}
+
+void framebufferSizeCallback(GLFWwindow *window, int vwidth, int vheight) {
+  glViewport(0, 0, vwidth, vheight);
+  width = vwidth;
+  height = vheight;
+}
+
+void processInput(GLFWwindow *window, UniformData &uniformData) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, true);
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    uniformData.center[1] += 0.01 * uniformData.zoom;
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    uniformData.center[1] -= 0.01 * uniformData.zoom;
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    uniformData.center[0] -= 0.01 * uniformData.zoom;
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    uniformData.center[0] += 0.01 * uniformData.zoom;
+  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    uniformData.zoom *= 1.01;
+  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    uniformData.zoom /= 1.01;
+  if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)
+    uniformData.iterations += 1.0;
+  if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
+    uniformData.iterations -= 1.0;
+}
+
+std::string readFile(std::string filename) {
+  std::ifstream file(filename);
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  return buffer.str();
 }

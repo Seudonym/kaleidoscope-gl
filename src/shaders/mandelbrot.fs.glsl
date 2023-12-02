@@ -16,19 +16,21 @@ vec3 mandelbrot(vec2 uv) {
     z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
     i += 1.0;
   }
-  float norm_i = i / u_iterations;
+  // Smooth color
+  float norm_i = i - log(log(dot(z, z))) / log(2.0);
+  norm_i /= u_iterations;
   return vec3(norm_i);
 }
 
 void main() {
   // Setup uv
-  vec2 uv = gl_FragCoord.xy / u_resolution.xy - vec2(1.0);
+  vec2 uv = gl_FragCoord.xy / u_resolution.xy - vec2(0.5);
   uv *= vec2(u_resolution.x / u_resolution.y, 1.0);
 
   // Render
   float iterations = u_iterations;
   vec3 color = mandelbrot(uv * u_zoom + u_center);
-
+  if (length(uv) < 0.01) { color = vec3(1.0, 0.0, 0.0); }
   // Output
   FragColor = vec4(color, 1.0);
 }
