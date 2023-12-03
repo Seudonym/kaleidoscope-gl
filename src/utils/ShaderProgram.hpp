@@ -11,6 +11,7 @@ private:
 
   UniformData uniformData;
 public:
+  ShaderProgram();
   ShaderProgram(std::string vertexShaderSource, std::string fragmentShaderSource);
   ShaderProgram(std::string vertexShaderSource, std::string fragmentShaderSource, UniformData uniformData);
   

@@ -17,6 +17,8 @@ struct UniformData {
   real iterations;
 };
 
+class ShaderProgram;
+
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window, UniformData &uniformData);
+void processInput(GLFWwindow *window, UniformData &uniformData, ShaderProgram &shaderProgram);
 std::string readFile(std::string filename);

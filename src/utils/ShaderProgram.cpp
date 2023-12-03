@@ -1,6 +1,8 @@
 #include "ShaderProgram.hpp"
 #include <iostream>
 
+ShaderProgram::ShaderProgram() {}
+
 ShaderProgram::ShaderProgram(std::string vertexShader,
                              std::string fragmentShader) {
   this->vertexShader = compileShader(vertexShader, GL_VERTEX_SHADER);

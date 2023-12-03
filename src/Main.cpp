@@ -13,6 +13,8 @@ real vertices[] = {
 int width = 1280;
 int height = 720;
 
+ShaderProgram grayscale, smooth;
+
 int main() {
   // Window dimensions
   // Initialize GLFW
@@ -31,9 +33,14 @@ int main() {
     std::cerr << "Failed to initialize GLEW." << std::endl;
 
   // Create and compile shader program
-  ShaderProgram shaderProgram(readFile("./shaders/quad.vs.glsl"),
-                              readFile("./shaders/mandelbrot.fs.glsl"));
+  grayscale = ShaderProgram(readFile("./shaders/quad.vs.glsl"),
+                            readFile("./shaders/mandelbrot.fs.glsl"));
 
+  smooth = ShaderProgram(readFile("./shaders/quad.vs.glsl"),
+                         readFile("./shaders/smooth_coloring.fs.glsl"));
+
+  ShaderProgram shaderProgram = grayscale;
+  // Create and populate a VBO, and setup VAO
   // Create and populate a VBO, and setup VAO
   GLuint VBO, VAO;
   glGenVertexArrays(1, &VAO);
@@ -58,7 +65,7 @@ int main() {
   glBindVertexArray(VAO);
   while (!glfwWindowShouldClose(window)) {
     // Input
-    processInput(window, uniformData);
+    processInput(window, uniformData, shaderProgram);
     // Set and send updated uniforms to GPU
     shaderProgram.use();
     uniformData.resolution[0] = width;
@@ -84,7 +91,8 @@ void framebufferSizeCallback(GLFWwindow *window, int vwidth, int vheight) {
   height = vheight;
 }
 
-void processInput(GLFWwindow *window, UniformData &uniformData) {
+void processInput(GLFWwindow *window, UniformData &uniformData,
+                  ShaderProgram &shaderProgram) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -103,6 +111,10 @@ void processInput(GLFWwindow *window, UniformData &uniformData) {
     uniformData.iterations += 1.0;
   if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
     uniformData.iterations -= 1.0;
+  if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+    shaderProgram = grayscale;
+  if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+    shaderProgram = smooth;
 }
 
 std::string readFile(std::string filename) {
