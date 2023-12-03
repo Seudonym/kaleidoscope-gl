@@ -15,10 +15,10 @@ struct UniformData {
   real center[2];
   real zoom;
   real iterations;
+  // Specific uniforms
+  real input1[3];
 };
 
 class ShaderProgram;
 
-void framebufferSizeCallback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window, UniformData &uniformData, ShaderProgram &shaderProgram);
 std::string readFile(std::string filename);

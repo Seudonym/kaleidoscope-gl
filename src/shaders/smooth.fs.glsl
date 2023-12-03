@@ -6,13 +6,13 @@ uniform vec2 u_resolution;
 uniform vec2 u_center;
 uniform float u_zoom;
 uniform float u_iterations;
+uniform vec3 u_input1;
+
 
 vec3 coloringFunction(float t) {
-  vec3 a = vec3(0.5, 0.3, 0.5);
-  vec3 b = vec3(0.5, 0.5, 0.2);
-  vec3 c = vec3(0.6, 1.0, 1.0);
-  vec3 d = vec3(0.0, 0.0, 0.0);
-  return a + b * cos(6.28318 * (c * t + d));
+  return vec3(0.5 + 0.5 * cos(3.0 + t + u_input1.x),
+              0.5 + 0.5 * cos(3.0 + t + u_input1.y),
+              0.5 + 0.5 * cos(3.0 + t + u_input1.z));
 }
 
 vec3 mandelbrot(vec2 uv) {
@@ -29,13 +29,13 @@ vec3 mandelbrot(vec2 uv) {
   return coloringFunction(norm_i / u_iterations);
 }
 
+
 void main() {
   // Setup uv
   vec2 uv = gl_FragCoord.xy / u_resolution.xy - vec2(0.5);
-  uv *= vec2(u_resolution.x / u_resolution.y, 1.0);
+  uv *= 2.0 * vec2(u_resolution.x / u_resolution.y, 1.0);
 
   // Render
-  float iterations = u_iterations;
   vec3 color = mandelbrot(uv * u_zoom + u_center);
   if (length(uv) < 0.01) { color = vec3(1.0, 0.0, 0.0); }
   // Output

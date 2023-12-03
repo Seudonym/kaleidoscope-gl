@@ -72,6 +72,8 @@ void ShaderProgram::sendUniformData() {
   glUniform1f(glGetUniformLocation(program, "u_zoom"), uniformData.zoom);
   glUniform1f(glGetUniformLocation(program, "u_iterations"),
               uniformData.iterations);
+  glUniform3f(glGetUniformLocation(program, "u_input1"), uniformData.input1[0],
+              uniformData.input1[1], uniformData.input1[2]);
 }
 void ShaderProgram::use() { glUseProgram(program); }
 
