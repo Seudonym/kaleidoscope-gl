@@ -72,8 +72,15 @@ void ShaderProgram::sendUniformData() {
   glUniform1f(glGetUniformLocation(program, "u_zoom"), uniformData.zoom);
   glUniform1f(glGetUniformLocation(program, "u_iterations"),
               uniformData.iterations);
-  glUniform3f(glGetUniformLocation(program, "u_input1"), uniformData.input1[0],
-              uniformData.input1[1], uniformData.input1[2]);
+  glUniform1f(glGetUniformLocation(program, "u_power"), uniformData.power);
+  glUniform1i(glGetUniformLocation(program, "u_time"), uniformData.time);
+  glUniform1f(glGetUniformLocation(program, "u_gamma"), uniformData.gamma);
+
+  glUniform3f(glGetUniformLocation(program, "input1"), uniformData.input1[0], uniformData.input1[1], uniformData.input1[2]);
+  glUniform3f(glGetUniformLocation(program, "input2"), uniformData.input2[0], uniformData.input2[1], uniformData.input2[2]);
+  glUniform3f(glGetUniformLocation(program, "input3"), uniformData.input3[0], uniformData.input3[1], uniformData.input3[2]);
+  glUniform3f(glGetUniformLocation(program, "input4"), uniformData.input4[0], uniformData.input4[1], uniformData.input4[2]);
+  // repeat abov till input4
 }
 void ShaderProgram::use() { glUseProgram(program); }
 
