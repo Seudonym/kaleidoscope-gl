@@ -18,10 +18,12 @@ real vertices[] = {
 double prevMouseX, prevMouseY;
 double mouseX, mouseY;
 
-unsigned int width = 2500;
-unsigned int height = 1400;
+unsigned int width = 2560;
+unsigned int height = 1440;
 
-ShaderProgram base;
+ShaderProgram base, blend;
+
+bool record = false;
 
 int main() {
   // Window dimensions
@@ -43,9 +45,11 @@ int main() {
 
   // Create and compile shader program
   base = ShaderProgram(readFile("./shaders/quad.vs.glsl"),
-                            readFile("./shaders/base.fs.glsl"));
+                       readFile("./shaders/base.fs.glsl"));
+  blend = ShaderProgram(readFile("./shaders/quad.vs.glsl"),
+                        readFile("./shaders/blend.fs.glsl"));
 
-  ShaderProgram shaderProgram = base;
+  ShaderProgram shaderProgram = blend;
   // Create and populate a VBO, and setup VAO
   GLuint VBO, VAO;
   glGenVertexArrays(1, &VAO);
@@ -80,6 +84,7 @@ int main() {
   ImGui_ImplGlfw_InitForOpenGL(window, true);
   ImGui_ImplOpenGL3_Init("#version 460");
 
+  int counter = 0;
   while (!glfwWindowShouldClose(window)) {
     uniformData.time++;
     processInput(window, uniformData, shaderProgram);
@@ -94,6 +99,22 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    // Hacky record
+    if (record) {
+      std::cout << "recording";
+      unsigned char *data = new unsigned char[3 * width * height];
+      glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+      std::ofstream file(std::string("video/frame") +
+                         std::to_string(counter++) + std::string(".ppm"));
+      file << "P3\n" << width << " " << height << "\n255\n";
+      for (int i = 0; i < width * height; i++) {
+        file << (int)data[3 * i] << " " << (int)data[3 * i + 1] << " "
+             << (int)data[3 * i + 2] << "\n";
+      }
+
+      file.close();
+      delete[] data;
+    }
 
     // ImGui rendering
     ImGui_ImplOpenGL3_NewFrame();
@@ -101,12 +122,12 @@ int main() {
     ImGui::NewFrame();
     ImGui::Begin("Controls");
     ImGui::InputFloat("Iterations", &uniformData.iterations);
-    ImGui::SliderFloat("Power", &uniformData.power, 0.0, 8.0);
+    ImGui::SliderFloat("Power", &uniformData.power, 0.0, 20.0);
     ImGui::SliderFloat("Gamma", &uniformData.gamma, 0.0, 4.0);
-    ImGui::ColorPicker3("Input 1", uniformData.input1);
-    ImGui::ColorPicker3("Input 2", uniformData.input2);
-    ImGui::ColorPicker3("Input 3", uniformData.input3);
-    ImGui::ColorPicker3("Input 4", uniformData.input4);
+    ImGui::ColorEdit3("Input 1", uniformData.input1);
+    ImGui::ColorEdit3("Input 2", uniformData.input2);
+    ImGui::ColorEdit3("Input 3", uniformData.input3);
+    ImGui::ColorEdit3("Input 4", uniformData.input4);
     if (ImGui::Button("Screenshot")) {
       unsigned char *data = new unsigned char[3 * width * height];
       glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -160,7 +181,7 @@ void processInput(GLFWwindow *window, UniformData &uniformData,
     uniformData.iterations += 1.0;
   else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
     uniformData.iterations -= 1.0;
-  
+
   if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS)
     uniformData.power += 0.1;
   else if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS)
@@ -174,6 +195,11 @@ void processInput(GLFWwindow *window, UniformData &uniformData,
         4.0 * (mouseY - prevMouseY) / height * uniformData.zoom;
   }
   glfwGetCursorPos(window, &prevMouseX, &prevMouseY);
+
+  if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+    record = true;
+  if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
+    record = false;
 }
 
 std::string readFile(std::string filename) {

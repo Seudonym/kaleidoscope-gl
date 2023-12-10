@@ -13,6 +13,11 @@ uniform float u_gamma;
 
 uniform vec3 input1, input2, input3, input4;
 
+vec3 palette[] = {
+  vec3(0.0),
+  input1, input2, input3, input4
+};
+
 vec3 mandelbrot(vec2 uv) {
   const float radius = 4.0;
 
@@ -36,8 +41,13 @@ vec3 mandelbrot(vec2 uv) {
   sn = sn / u_iterations;
 
   float v = pow(1.0 - sn, u_power);
+  float pindex = v * 4;
 
-  return vec3(v);
+  vec3 c1 = palette[int(pindex)];
+  vec3 c2 = palette[int(pindex) + 1];
+
+  return mix(c1, c2, fract(pindex));
+
 }
 
 void main() {
@@ -47,7 +57,7 @@ void main() {
 
   // Render
   vec3 color = mandelbrot(uv * u_zoom + u_center);
-
+  // if (length(uv) < 0.01) { color = vec3(1.0, 0.0, 0.0); }
   // Output
-  FragColor = pow(vec4(color, 1.0), vec4(u_gamma));
+  FragColor = pow(vec4(color, 1.0), vec4(1.0 / u_gamma));
 }
